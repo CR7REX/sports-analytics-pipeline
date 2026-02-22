@@ -1,121 +1,68 @@
-# Sports Analytics Pipeline ⚽
+# Sports Analytics Pipeline
 
 [![Python](https://img.shields.io/badge/Python-3.11-blue.svg)](https://www.python.org/)
 [![Apache Airflow](https://img.shields.io/badge/Airflow-2.8+-017CEE.svg)](https://airflow.apache.org/)
 [![dbt](https://img.shields.io/badge/dbt-1.7+-FF694B.svg)](https://www.getdbt.com/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-End-to-end data pipeline for football analytics, processing match data from multiple sources into actionable insights.
+A data pipeline for football stats because I got tired of checking league tables manually.
 
-## 🎯 Overview
+## What this actually does
 
-This project demonstrates modern data engineering practices by building a complete analytics pipeline for football data:
+Grabs match data from Football-Data.co.uk every day, shoves it through Airflow, models it with dbt, and spits out a Streamlit dashboard so I can see who's actually performing vs who just got lucky.
 
-- **Data Ingestion**: Automated extraction from StatsBomb and FBref APIs
-- **Orchestration**: Apache Airflow for workflow management
-- **Transformation**: dbt for data modeling and testing
-- **Storage**: BigQuery for data warehouse
-- **Visualization**: Streamlit for interactive dashboards
+## Why I built this
 
-## 🏗️ Architecture
+Mostly because I wanted an excuse to use Airflow in a real project. Also because arguing about football stats with incomplete data is annoying.
 
-```
-┌─────────────────┐     ┌─────────────┐     ┌──────────────┐
-│   Data Sources  │────▶│   Airflow   │────▶│   BigQuery   │
-│  (StatsBomb,    │     │   (DAGs)    │     │  (Raw Data)  │
-│    FBref)       │     └─────────────┘     └──────────────┘
-└─────────────────┘                                  │
-                                                     ▼
-┌─────────────────┐     ┌─────────────┐     ┌──────────────┐
-│  Streamlit App  │◀────│   dbt       │◀────│   BigQuery   │
-│  (Dashboard)    │     │  (Models)   │     │  (Analytics) │
-└─────────────────┘     └─────────────┘     └──────────────┘
-```
+## The setup
 
-## 🚀 Features
+Data comes from here → Airflow DAGs run daily → dbt models clean it up → Streamlit shows pretty charts
 
-- **Automated Data Collection**: Daily ingestion of match results, player stats, and league standings
-- **Data Quality**: Great Expectations for validation and anomaly detection
-- **Dimensional Modeling**: Star schema optimized for analytical queries
-- **Performance Metrics**: xG analysis, form tracking, and team comparisons
-- **Interactive Dashboards**: Real-time visualization of key metrics
+I was going to use StatsBomb but their API requires a PhD to authenticate. Football-Data.co.uk gives you CSVs directly. No API key, no rate limits, no drama.
 
-## 🛠️ Tech Stack
+## What's working so far
 
-| Component | Technology |
-|-----------|------------|
-| Orchestration | Apache Airflow |
-| Data Warehouse | BigQuery |
-| Transformation | dbt |
-| Data Quality | Great Expectations |
-| Visualization | Streamlit |
-| Infrastructure | Docker, Terraform |
+- Daily scraping of match results (Premier League, La Liga, Bundesliga, etc.)
+- Basic data quality checks (no null teams, dates make sense)
+- Staging models in dbt
+- A Streamlit dashboard that shows... tables. Working on the charts.
 
-## 📁 Project Structure
+## What's not working / TODO
 
-```
-.
-├── dags/                    # Airflow DAGs
-│   ├── extract_matches.py
-│   ├── extract_players.py
-│   └── daily_etl.py
-├── dbt/                     # dbt project
-│   ├── models/
-│   │   ├── staging/
-│   │   ├── intermediate/
-│   │   └── marts/
-│   └── tests/
-├── streamlit/               # Dashboard app
-│   └── app.py
-├── docker-compose.yml       # Local development
-└── README.md
-```
+- [ ] Actually finish the dbt marts models (league tables, top scorers)
+- [ ] Make the Streamlit dashboard not look like it was made in 1995
+- [ ] Add xG data if I can find a free source
+- [ ] Maybe some betting odds comparison if I'm feeling spicy
 
-## 🚦 Quick Start
+## Tech stuff
 
-### Prerequisites
+- **Airflow** for scheduling
+- **dbt** for data modeling (trying to follow best practices but probably failing)
+- **BigQuery** for storage (the free tier is generous)
+- **Streamlit** for visualization
+- **Docker** because I don't want to install Postgres on my machine
 
-- Python 3.11+
-- Docker & Docker Compose
-- Google Cloud Platform account
-
-### Local Development
+## Running it locally
 
 ```bash
-# Clone the repository
 git clone https://github.com/CR7REX/sports-analytics-pipeline.git
 cd sports-analytics-pipeline
-
-# Start Airflow and dependencies
 docker-compose up -d
-
-# Access Airflow UI
-open http://localhost:8080
-
-# Run dbt models
-cd dbt
-dbt run
-dbt test
 ```
 
-## 📊 Sample Insights
+Then go to `localhost:8080` for Airflow, `localhost:8501` for Streamlit.
 
-- League standings with rolling form (last 5 matches)
-- Player performance radar charts
-- Team comparison matrices
-- Goal prediction based on xG
+## What I learned so far
 
-## 🗺️ Roadmap
+- Airflow's TaskFlow API is actually pretty nice once you get used to it
+- dbt tests save you from embarrassing data errors
+- Football data is surprisingly messy (who formats dates like DD/MM/YY in 2025??)
+- Docker networking is still black magic to me
 
-- [ ] Add real-time match event streaming
-- [ ] Implement ML models for match outcome prediction
-- [ ] Expand to additional leagues and sports
-- [ ] Add betting odds comparison module
+## Data source
 
-## 📝 License
-
-MIT License - see [LICENSE](LICENSE) for details.
+[Football-Data.co.uk](https://www.football-data.co.uk/) - free historical data going back to the 90s. Not the most detailed but good enough for this.
 
 ---
 
-*Built with passion for football and data* ⚽📊
+*Built while arguing about whether xG is actually useful or just fancy stats for nerds.*
