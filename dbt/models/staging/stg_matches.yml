@@ -1,0 +1,27 @@
+# Staging model for raw match data
+
+version: 2
+
+models:
+  - name: stg_matches
+    description: "Staging model for football match data from Football-Data.co.uk"
+    columns:
+      - name: match_id
+        description: "Unique identifier for each match"
+        tests:
+          - unique
+          - not_null
+      - name: league
+        description: "League name"
+      - name: match_date
+        description: "Date of the match"
+      - name: home_team
+        description: "Home team name"
+      - name: away_team
+        description: "Away team name"
+      - name: home_goals
+        description: "Goals scored by home team"
+      - name: away_goals
+        description: "Goals scored by away team"
+      - name: result
+        description: "Match result (H/D/A)"

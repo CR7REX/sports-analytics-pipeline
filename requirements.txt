@@ -1,0 +1,29 @@
+# Data Engineering
+apache-airflow==2.8.0
+psycopg2-binary==2.9.9
+redis==5.0.1
+
+# dbt
+dbt-core==1.7.0
+dbt-bigquery==1.7.0
+dbt-postgres==1.7.0
+
+# Data Processing
+pandas==2.1.4
+numpy==1.26.2
+requests==2.31.0
+
+# Visualization
+streamlit==1.29.0
+plotly==5.17.0
+
+# Data Quality
+great-expectations==0.18.0
+
+# Testing
+pytest==7.4.3
+pytest-mock==3.12.0
+
+# Utilities
+python-dotenv==1.0.0
+pyyaml==6.0.1
