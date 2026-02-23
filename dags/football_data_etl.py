@@ -29,7 +29,7 @@ def extract_match_data(**context):
     Extract match data from Football-Data.co.uk
     Downloads CSV data for current season
     """
-    season = "2425"  # 2024-25 season format
+    season = "2526"  # 2025-26 season format
     all_matches = []
     
     for league_code, league_name in LEAGUES.items():

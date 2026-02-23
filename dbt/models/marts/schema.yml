@@ -48,3 +48,29 @@ models:
           - dbt_utils.accepted_range:
               min_value: 0
               max_value: 15
+
+  - name: fct_top_scorers
+    description: "Team goal scoring statistics with home/away breakdown"
+    columns:
+      - name: league
+        description: "League name"
+        tests:
+          - not_null
+      - name: team
+        description: "Team name"
+        tests:
+          - not_null
+      - name: total_goals
+        description: "Total goals scored"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: goals_per_match
+        description: "Average goals per match"
+        tests:
+          - not_null
+      - name: league_rank
+        description: "Team ranking by total goals in league"
+        tests:
+          - not_null
