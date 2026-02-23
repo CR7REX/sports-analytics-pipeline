@@ -6,6 +6,38 @@
 
 A data pipeline for football stats because I got tired of checking league tables manually.
 
+## Architecture
+
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│  Data Source    │     │   Processing    │     │   Serving       │
+│                 │     │                 │     │                 │
+│ Football-Data   │────▶│  Airflow DAGs   │────▶│  Streamlit      │
+│ (.co.uk CSVs)   │     │  (Daily ETL)    │     │  Dashboard      │
+└─────────────────┘     └────────┬────────┘     └─────────────────┘
+                                 │
+                                 ▼
+                        ┌─────────────────┐
+                        │   PostgreSQL    │
+                        │   (Raw Data)    │
+                        └────────┬────────┘
+                                 │
+                                 ▼
+                        ┌─────────────────┐
+                        │      dbt        │
+                        │  (Transform &   │
+                        │   Data Quality) │
+                        └────────┬────────┘
+                                 │
+                                 ▼
+                        ┌─────────────────┐
+                        │   PostgreSQL    │
+                        │  (Modeled Data) │
+                        └─────────────────┘
+```
+
+**Data Flow**: CSV Download → Airflow Orchestration → Raw Storage → dbt Modeling → Analytics-Ready Data → Streamlit Viz
+
 ## What this actually does
 
 Grabs match data from Football-Data.co.uk every day, shoves it through Airflow, models it with dbt, and spits out a Streamlit dashboard so I can see who's actually performing vs who just got lucky.
