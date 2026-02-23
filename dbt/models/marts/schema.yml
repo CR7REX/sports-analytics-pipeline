@@ -1,0 +1,50 @@
+# Mart models for business analytics
+
+version: 2
+
+models:
+  - name: fct_league_standings
+    description: "League standings with points, wins, draws, losses, and goal difference"
+    columns:
+      - name: league
+        description: "League name"
+        tests:
+          - not_null
+      - name: team
+        description: "Team name"
+        tests:
+          - not_null
+      - name: matches_played
+        description: "Total matches played"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 50
+      - name: points
+        description: "Total points (3 for win, 1 for draw)"
+        tests:
+          - not_null
+      - name: league_position
+        description: "Current position in league table"
+        tests:
+          - not_null
+
+  - name: fct_team_form
+    description: "Team form analysis for last 5 matches"
+    columns:
+      - name: team
+        description: "Team name"
+        tests:
+          - not_null
+      - name: form_last_5
+        description: "String of last 5 results (W/D/L)"
+        tests:
+          - not_null
+      - name: points_last_5
+        description: "Points earned in last 5 matches"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 15

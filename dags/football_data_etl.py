@@ -10,6 +10,10 @@ import os
 # Football-Data.co.uk API endpoints
 BASE_URL = "https://www.football-data.co.uk/mmz4281"
 
+# Data paths - use environment variable or default to local path
+DATA_DIR = os.environ.get('AIRFLOW_DATA_DIR', './data')
+RAW_DATA_PATH = os.path.join(DATA_DIR, 'raw', 'matches.csv')
+
 # Top European leagues
 LEAGUES = {
     'E0': 'Premier League',
@@ -42,9 +46,10 @@ def extract_match_data(**context):
     
     if all_matches:
         combined = pd.concat(all_matches, ignore_index=True)
-        output_path = "/opt/airflow/data/raw/matches.csv"
-        combined.to_csv(output_path, index=False)
-        print(f"💾 Saved {len(combined)} total matches to {output_path}")
+        # Ensure directory exists
+        os.makedirs(os.path.dirname(RAW_DATA_PATH), exist_ok=True)
+        combined.to_csv(RAW_DATA_PATH, index=False)
+        print(f"💾 Saved {len(combined)} total matches to {RAW_DATA_PATH}")
         return len(combined)
     return 0
 
@@ -52,12 +57,10 @@ def validate_data(**context):
     """
     Basic data quality checks
     """
-    input_path = "/opt/airflow/data/raw/matches.csv"
+    if not os.path.exists(RAW_DATA_PATH):
+        raise ValueError(f"Raw data file not found at {RAW_DATA_PATH}!")
     
-    if not os.path.exists(input_path):
-        raise ValueError("Raw data file not found!")
-    
-    df = pd.read_csv(input_path)
+    df = pd.read_csv(RAW_DATA_PATH)
     
     # Quality checks
     checks = {

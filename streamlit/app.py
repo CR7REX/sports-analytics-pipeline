@@ -17,7 +17,8 @@ st.title("⚽ Football Analytics Dashboard")
 def load_data():
     try:
         df = pd.read_csv("data/raw/matches.csv")
-        df['Date'] = pd.to_datetime(df['Date'], format='%d/%m/%y', errors='coerce')
+        # Handle DD/MM/YYYY format
+        df['Date'] = pd.to_datetime(df['Date'], format='%d/%m/%Y', errors='coerce')
         return df
     except:
         return pd.DataFrame()
