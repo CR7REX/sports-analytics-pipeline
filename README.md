@@ -55,14 +55,14 @@ I was going to use StatsBomb but their API requires a PhD to authenticate. Footb
 ## What's working so far
 
 - Daily scraping of match results (Premier League, La Liga, Bundesliga, etc.)
-- Basic data quality checks (no null teams, dates make sense)
-- Staging models in dbt
-- A Streamlit dashboard that shows... tables. Working on the charts.
+- Data quality checks (not null, unique constraints, date validation)
+- dbt staging and marts models (league tables, top scorers, team form)
+- Streamlit dashboard with interactive charts (Plotly) and filters
 
 ## What's not working / TODO
 
-- [ ] Actually finish the dbt marts models (league tables, top scorers)
-- [ ] Make the Streamlit dashboard not look like it was made in 1995
+- [x] Actually finish the dbt marts models (league tables, top scorers)
+- [x] Make the Streamlit dashboard not look like it was made in 1995
 - [ ] Add xG data if I can find a free source
 - [ ] Maybe some betting odds comparison if I'm feeling spicy
 
