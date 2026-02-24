@@ -65,7 +65,7 @@ select
     goals_against,
     goal_difference,
     -- Rank within each league
-    row_number() over (partition by league order by total_points desc, goal_difference desc, goals_for desc) as league_position,
-    current_timestamp() as calculated_at
+    row_number() over (partition by league order by total_points desc, goal_difference desc, goals_for desc) as rank,
+    current_timestamp as calculated_at
 from standings
-order by league, league_position
+order by league, rank

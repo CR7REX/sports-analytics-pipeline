@@ -5,23 +5,23 @@ with source as (
 renamed as (
     select
         -- Generate unique match ID
-        {{ dbt_utils.generate_surrogate_key(['Date', 'HomeTeam', 'AwayTeam']) }} as match_id,
+        {{ dbt_utils.generate_surrogate_key(['date', 'hometeam', 'awayteam']) }} as match_id,
         
         -- League info
         league,
         league_code,
         
         -- Match details
-        to_date(Date, 'DD/MM/YY') as match_date,
-        HomeTeam as home_team,
-        AwayTeam as away_team,
+        to_date(date, 'DD/MM/YY') as match_date,
+        hometeam as home_team,
+        awayteam as away_team,
         
         -- Goals
-        cast(FTHG as int) as home_goals,
-        cast(FTAG as int) as away_goals,
+        cast(fthg as int) as home_goals,
+        cast(ftag as int) as away_goals,
         
         -- Result
-        FTR as result,  -- H = Home win, D = Draw, A = Away win
+        ftr as result,  -- H = Home win, D = Draw, A = Away win
         
         -- Metadata
         extracted_at

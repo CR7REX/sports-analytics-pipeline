@@ -54,10 +54,14 @@ I was going to use StatsBomb but their API requires a PhD to authenticate. Footb
 
 ## What's working so far
 
-- Daily scraping of match results (Premier League, La Liga, Bundesliga, etc.)
-- Data quality checks (not null, unique constraints, date validation)
-- dbt staging and marts models (league tables, top scorers, team form)
-- Streamlit dashboard with interactive charts (Plotly) and filters
+- Daily scraping of match results (Premier League, La Liga, Bundesliga, Serie A, Ligue 1)
+- Data quality checks with dbt (not null, unique constraints, date validation)
+- **dbt marts models**: league standings, top scorers, team form
+- **Streamlit dashboard** with dbt-powered analytics:
+  - League standings with Champions League (top 4) and relegation highlighting
+  - Top scorers rankings with home/away breakdown
+  - Team form analysis (last 5 matches)
+  - Interactive charts and team comparison
 
 ## What's not working / TODO
 

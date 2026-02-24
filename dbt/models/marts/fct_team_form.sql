@@ -43,6 +43,7 @@ recent_form as (
         form_result,
         goals_for,
         goals_against,
+        goals_for - goals_against as goal_diff,
         -- Get last 5 matches per team
         row_number() over (partition by team order by match_date desc) as match_number
     from team_matches
@@ -74,7 +75,12 @@ form_summary as (
             partition by team
             order by match_date desc
             rows between current row and 4 following
-        ) as goals_against_last_5
+        ) as goals_against_last_5,
+        sum(goal_diff) over (
+            partition by team
+            order by match_date desc
+            rows between current row and 4 following
+        ) as goal_diff_last_5
     from recent_form
     where match_number <= 5
 )
@@ -86,9 +92,10 @@ select distinct
     points_last_5,
     goals_for_last_5,
     goals_against_last_5,
-    goals_for_last_5 - goals_against_last_5 as goal_diff_last_5,
+    goal_diff_last_5,
     round(points_last_5 / 15.0 * 100, 1) as form_percentage,
-    current_timestamp() as calculated_at
+    current_timestamp as calculated_at,
+    row_number() over (partition by league order by points_last_5 desc, goal_diff_last_5 desc) as form_rank
 from form_summary
 where length(last_5_results) >= 5
 order by league, points_last_5 desc, goal_diff_last_5 desc

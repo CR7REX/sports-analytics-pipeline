@@ -4,7 +4,7 @@
 with team_goals as (
     -- Home team goals
     select
-n        league,
+        league,
         home_team as team,
         home_goals as goals,
         'home' as venue,
@@ -47,7 +47,7 @@ goal_rankings as (
         team,
         matches_played,
         total_goals,
-        round(goals_per_match, 2) as goals_per_match,
+        round(goals_per_match::numeric, 2) as goals_per_match,
         home_goals,
         away_goals,
         round(100.0 * home_goals / nullif(total_goals, 0), 1) as home_goals_pct,
@@ -62,7 +62,7 @@ goal_rankings as (
                 row_number() over (partition by league order by goals_per_match desc)
             else null
         end as efficiency_rank,
-        current_timestamp() as calculated_at
+        current_timestamp as calculated_at
     from goal_stats
 )
 

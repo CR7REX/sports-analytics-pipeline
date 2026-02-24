@@ -14,6 +14,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./data:/opt/airflow/data
 
   redis:
     image: redis:7
@@ -34,6 +35,7 @@ services:
       AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     volumes:
       - ./dags:/opt/airflow/dags
+      - ./dbt:/opt/airflow/dbt
       - ./data:/opt/airflow/data
       - ./logs:/opt/airflow/logs
     ports:
@@ -51,6 +53,7 @@ services:
       AIRFLOW__CORE__FERNET_KEY: ''
     volumes:
       - ./dags:/opt/airflow/dags
+      - ./dbt:/opt/airflow/dbt
       - ./data:/opt/airflow/data
       - ./logs:/opt/airflow/logs
     command: scheduler
@@ -65,7 +68,7 @@ services:
     ports:
       - "8501:8501"
     command: >
-      bash -c "pip install streamlit pandas plotly requests &&
+      bash -c "pip install streamlit pandas plotly requests psycopg2-binary sqlalchemy &&
                streamlit run app.py --server.address=0.0.0.0"
 
 volumes:
