@@ -5,7 +5,6 @@ from airflow.utils.dates import days_ago
 from datetime import datetime, timedelta
 import requests
 import pandas as pd
-import json
 import os
 from sqlalchemy import create_engine, text
 
@@ -103,38 +102,73 @@ def validate_data(**context):
 def load_to_postgres(**context):
     """
     Load cleaned data into PostgreSQL for dbt consumption
+    Uses staging table + transactional swap to avoid partial-load windows.
     """
     if not os.path.exists(RAW_DATA_PATH):
         raise ValueError(f"Raw data file not found at {RAW_DATA_PATH}!")
-    
+
     df = pd.read_csv(RAW_DATA_PATH)
-    
+
     # Connect to Postgres
     engine = create_engine(DB_CONN_STR)
-    
+
     # Rename columns to lowercase for consistency
     df.columns = [col.lower() for col in df.columns]
-    
-    # Clear existing data and load new data
-    with engine.begin() as conn:  # 使用 begin() 而不是 connect()，自动处理 commit
-        conn.execute(text("TRUNCATE TABLE public.matches"))
-    # 事务在退出上下文时自动提交
-    
+
+    # 1) Load to staging table first
+    staging_table = 'matches_staging'
     df.to_sql(
-        'matches',
+        staging_table,
         engine,
         schema='public',
-        if_exists='append',
+        if_exists='replace',
         index=False
     )
-    
+
+    # 2) Atomic-ish swap inside one transaction
+    with engine.begin() as conn:
+        conn.execute(text("TRUNCATE TABLE public.matches"))
+        conn.execute(text("INSERT INTO public.matches SELECT * FROM public.matches_staging"))
+        conn.execute(text("DROP TABLE public.matches_staging"))
+
     # Verify load
     with engine.connect() as conn:
         result = conn.execute(text("SELECT COUNT(*) FROM public.matches"))
         count = result.scalar()
-    
+
     print(f"✅ Loaded {count} rows to public.matches")
     return count
+
+def notify_failure(context):
+    """Optional webhook alert for task failures (e.g. Discord/Slack)."""
+    webhook_url = os.environ.get('ALERT_WEBHOOK_URL')
+    if not webhook_url:
+        print("ℹ️ ALERT_WEBHOOK_URL not configured, skipping failure notification")
+        return
+
+    task_instance = context.get('task_instance')
+    dag_id = context.get('dag').dag_id if context.get('dag') else 'unknown_dag'
+    task_id = task_instance.task_id if task_instance else 'unknown_task'
+    run_id = context.get('run_id', 'unknown_run')
+    log_url = task_instance.log_url if task_instance else ''
+
+    message = {
+        "text": (
+            f"🚨 Airflow task failed\n"
+            f"DAG: {dag_id}\n"
+            f"Task: {task_id}\n"
+            f"Run: {run_id}\n"
+            f"Logs: {log_url}"
+        )
+    }
+
+    try:
+        resp = requests.post(webhook_url, json=message, timeout=10)
+        resp.raise_for_status()
+        print("✅ Failure notification sent")
+    except Exception as e:
+        print(f"❌ Failed to send failure notification: {e}")
+
 
 # DAG definition
 with DAG(
@@ -146,6 +180,7 @@ with DAG(
         'email_on_retry': False,
         'retries': 1,
         'retry_delay': timedelta(minutes=5),
+        'on_failure_callback': notify_failure,
     },
     description='Daily ETL for football match data',
     schedule_interval='0 6 * * *',  # Daily at 6 AM
