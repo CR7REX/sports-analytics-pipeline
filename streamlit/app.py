@@ -59,7 +59,18 @@ def load_dbt_models():
 def load_raw_data():
     try:
         df = pd.read_csv("data/raw/matches.csv")
-        df['Date'] = pd.to_datetime(df['Date'], format='%d/%m/%Y', errors='coerce')
+
+        # Handle both DD/MM/YYYY and DD/MM/YY formats robustly
+        parsed_date = pd.to_datetime(df['Date'], format='%d/%m/%Y', errors='coerce')
+        missing_mask = parsed_date.isna()
+        if missing_mask.any():
+            parsed_date.loc[missing_mask] = pd.to_datetime(
+                df.loc[missing_mask, 'Date'],
+                format='%d/%m/%y',
+                errors='coerce'
+            )
+
+        df['Date'] = parsed_date
         df['Month'] = df['Date'].dt.to_period('M').astype(str)
         df['Week'] = df['Date'].dt.to_period('W').astype(str)
         df['TotalGoals'] = df['FTHG'] + df['FTAG']

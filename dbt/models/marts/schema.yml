@@ -5,6 +5,11 @@ version: 2
 models:
   - name: fct_league_standings
     description: "League standings with points, wins, draws, losses, and goal difference"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - league
+            - rank
     columns:
       - name: league
         description: "League name"
@@ -25,7 +30,7 @@ models:
         description: "Total points (3 for win, 1 for draw)"
         tests:
           - not_null
-      - name: league_position
+      - name: rank
         description: "Current position in league table"
         tests:
           - not_null

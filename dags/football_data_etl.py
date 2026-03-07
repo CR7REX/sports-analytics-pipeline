@@ -42,9 +42,9 @@ def get_current_season():
     month = today.month
     # 欧洲赛季通常8月开始
     if month >= 8:
-        return f"{year % 100}{(year + 1) % 100}"
+        return f"{year % 100:02d}{(year + 1) % 100:02d}"
     else:
-        return f"{(year - 1) % 100}{year % 100}"
+        return f"{(year - 1) % 100:02d}{year % 100:02d}"
 
 def extract_match_data(**context):
     """

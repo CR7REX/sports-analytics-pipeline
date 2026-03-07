@@ -45,7 +45,7 @@ recent_form as (
         goals_against,
         goals_for - goals_against as goal_diff,
         -- Get last 5 matches per team
-        row_number() over (partition by team order by match_date desc) as match_number
+        row_number() over (partition by league, team order by match_date desc) as match_number
     from team_matches
 ),
 
@@ -55,29 +55,29 @@ form_summary as (
         team,
         -- Recent form (last 5 results as string, e.g., "WWDLW")
         string_agg(form_result, '') over (
-            partition by team 
+            partition by league, team 
             order by match_date desc 
             rows between current row and 4 following
         ) as last_5_results,
         -- Points from last 5
         sum(case form_result when 'W' then 3 when 'D' then 1 else 0 end) over (
-            partition by team
+            partition by league, team
             order by match_date desc
             rows between current row and 4 following
         ) as points_last_5,
         -- Goals stats
         sum(goals_for) over (
-            partition by team
+            partition by league, team
             order by match_date desc
             rows between current row and 4 following
         ) as goals_for_last_5,
         sum(goals_against) over (
-            partition by team
+            partition by league, team
             order by match_date desc
             rows between current row and 4 following
         ) as goals_against_last_5,
         sum(goal_diff) over (
-            partition by team
+            partition by league, team
             order by match_date desc
             rows between current row and 4 following
         ) as goal_diff_last_5
