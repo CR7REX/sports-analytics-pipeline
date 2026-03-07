@@ -1,5 +1,6 @@
 from airflow import DAG
 from airflow.operators.python import PythonOperator
+from airflow.operators.bash import BashOperator
 from airflow.utils.dates import days_ago
 from datetime import datetime, timedelta
 import requests
@@ -164,5 +165,14 @@ with DAG(
         python_callable=load_to_postgres,
     )
 
-    # DAG flow: extract -> validate -> load
-    extract_task >> validate_task >> load_task
+    # Run dbt after loading data
+    dbt_run = BashOperator(
+        task_id='dbt_run',
+        bash_command='cd /opt/airflow/dbt && dbt run --target prod',
+        env={
+            'DBT_PROFILES_DIR': '/opt/airflow/dbt',
+        },
+    )
+
+    # DAG flow: extract -> validate -> load -> dbt_run
+    extract_task >> validate_task >> load_task >> dbt_run

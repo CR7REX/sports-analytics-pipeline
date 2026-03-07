@@ -10,3 +10,12 @@ sports_analytics:
       dbname: airflow
       schema: public
       threads: 4
+    prod:
+      type: postgres
+      host: postgres
+      port: 5432
+      user: airflow
+      password: airflow
+      dbname: airflow
+      schema: marts
+      threads: 8

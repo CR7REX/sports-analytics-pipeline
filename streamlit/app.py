@@ -38,12 +38,12 @@ def load_dbt_models():
         return None, None, None
     
     try:
-        # Load league standings from public_marts schema
-        standings = pd.read_sql("SELECT * FROM public_marts.fct_league_standings ORDER BY league, rank", engine)
-        # Load top scorers from public_marts schema
-        scorers = pd.read_sql("SELECT * FROM public_marts.fct_top_scorers ORDER BY league, league_rank", engine)
-        # Load team form from public_marts schema
-        team_form = pd.read_sql("SELECT * FROM public_marts.fct_team_form ORDER BY league, form_rank", engine)
+        # Load league standings from marts schema
+        standings = pd.read_sql("SELECT * FROM marts.fct_league_standings ORDER BY league, rank", engine)
+        # Load top scorers from marts schema
+        scorers = pd.read_sql("SELECT * FROM marts.fct_top_scorers ORDER BY league, league_rank", engine)
+        # Load team form from marts schema
+        team_form = pd.read_sql("SELECT * FROM marts.fct_team_form ORDER BY league, form_rank", engine)
         return standings, scorers, team_form
     except Exception as e:
         st.warning(f"Could not load dbt models: {e}")
