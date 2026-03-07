@@ -115,12 +115,16 @@ def load_to_postgres(**context):
     # Rename columns to lowercase for consistency
     df.columns = [col.lower() for col in df.columns]
     
-    # Load to database (replace mode for daily refresh)
+    # Clear existing data and load new data
+    with engine.connect() as conn:
+        conn.execute(text("TRUNCATE TABLE public.matches"))
+        conn.commit()
+    
     df.to_sql(
         'matches',
         engine,
         schema='public',
-        if_exists='replace',
+        if_exists='append',
         index=False
     )
     
