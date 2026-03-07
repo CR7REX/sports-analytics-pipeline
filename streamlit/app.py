@@ -17,6 +17,11 @@ st.set_page_config(
 st.title("⚽ Football Analytics Dashboard")
 st.markdown("Real-time insights from European football leagues")
 
+# Refresh button
+if st.button("🔄 刷新数据"):
+    st.cache_data.clear()
+    st.rerun()
+
 # Database connection
 @st.cache_resource
 def get_db_engine():
