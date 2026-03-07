@@ -172,9 +172,10 @@ with DAG(
     # Run dbt after loading data
     dbt_run = BashOperator(
         task_id='dbt_run',
-        bash_command='cd /opt/airflow/dbt && dbt run --target prod',
+        bash_command='cd /opt/airflow/dbt && /home/airflow/.local/bin/dbt run --target prod',
         env={
             'DBT_PROFILES_DIR': '/opt/airflow/dbt',
+            'HOME': '/home/airflow',
         },
     )
 
