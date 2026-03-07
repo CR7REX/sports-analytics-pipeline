@@ -18,7 +18,7 @@ st.title("⚽ Football Analytics Dashboard")
 st.markdown("Real-time insights from European football leagues")
 
 # Refresh button
-if st.button("🔄 刷新数据"):
+if st.button("🔄 Refresh Data"):
     st.cache_data.clear()
     st.rerun()
 
