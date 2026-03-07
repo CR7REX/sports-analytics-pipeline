@@ -54,39 +54,90 @@ I was going to use StatsBomb but their API requires a PhD to authenticate. Footb
 
 ## What's working so far
 
-- Daily scraping of match results (Premier League, La Liga, Bundesliga, Serie A, Ligue 1)
-- Data quality checks with dbt (not null, unique constraints, date validation)
+- **Daily scraping** of match results (Premier League, La Liga, Bundesliga, Serie A, Ligue 1)
+- **Dynamic season calculation** - automatically switches seasons based on current date
+- **Data quality checks** with dbt (not null, unique constraints, date validation)
 - **dbt marts models**: league standings, top scorers, team form
 - **Streamlit dashboard** with dbt-powered analytics:
   - League standings with Champions League (top 4) and relegation highlighting
   - Top scorers rankings with home/away breakdown
   - Team form analysis (last 5 matches)
   - Interactive charts and team comparison
+  - **Refresh button** to clear cache and reload data
 
 ## What's not working / TODO
 
 - [x] Actually finish the dbt marts models (league tables, top scorers)
 - [x] Make the Streamlit dashboard not look like it was made in 1995
+- [x] Integrate dbt into Airflow DAG
 - [ ] Add xG data if I can find a free source
 - [ ] Maybe some betting odds comparison if I'm feeling spicy
+- [ ] Add email/Slack alerts for DAG failures
 
 ## Tech stuff
 
 - **Airflow** for scheduling
-- **dbt** for data modeling (trying to follow best practices but probably failing)
-- **BigQuery** for storage (the free tier is generous)
+- **dbt** for data modeling
+- **PostgreSQL** for storage (running in Docker)
 - **Streamlit** for visualization
 - **Docker** because I don't want to install Postgres on my machine
 
-## Running it locally
+## Quick Start
 
 ```bash
+# Clone and start everything
 git clone https://github.com/CR7REX/sports-analytics-pipeline.git
 cd sports-analytics-pipeline
-docker-compose up -d
+make up
+
+# Or manually:
+docker-compose up -d --build
 ```
 
-Then go to `localhost:8080` for Airflow, `localhost:8501` for Streamlit.
+Then go to:
+- **Airflow**: http://localhost:8080 (admin/admin)
+- **Streamlit**: http://localhost:8501
+
+## Useful Commands
+
+```bash
+# View logs
+make logs
+
+# Run dbt manually
+make dbt-run
+
+# Run tests
+make test
+
+# Restart everything
+make restart
+
+# Clean up (removes all data!)
+make clean
+```
+
+## Project Structure
+
+```
+.
+├── dags/                       # Airflow DAGs
+│   └── football_data_etl.py   # Main ETL pipeline
+├── dbt/                        # dbt models
+│   ├── models/
+│   │   ├── staging/           # Staging models
+│   │   └── marts/             # Marts models
+│   ├── profiles.yml           # dbt profiles
+│   └── dbt_project.yml        # dbt project config
+├── streamlit/                  # Streamlit app
+│   ├── app.py                 # Main dashboard
+│   ├── Dockerfile             # Streamlit container
+│   └── requirements.txt       # Python deps
+├── tests/                      # Unit tests
+├── docker-compose.yml          # Docker services
+├── Makefile                    # Useful commands
+└── README.md                   # You are here
+```
 
 ## What I learned so far
 
@@ -94,10 +145,25 @@ Then go to `localhost:8080` for Airflow, `localhost:8501` for Streamlit.
 - dbt tests save you from embarrassing data errors
 - Football data is surprisingly messy (who formats dates like DD/MM/YY in 2025??)
 - Docker networking is still black magic to me
+- SQLAlchemy 2.0+ changed a lot of things (no more `conn.commit()`)
 
 ## Data source
 
 [Football-Data.co.uk](https://www.football-data.co.uk/) - free historical data going back to the 90s. Not the most detailed but good enough for this.
+
+## Troubleshooting
+
+**Streamlit shows old data?**
+Click the "🔄 Refresh Data" button or wait for the 1-hour cache to expire.
+
+**DAG failed at load_to_postgres?**
+Check if the table has dependent views. We use TRUNCATE+INSERT instead of REPLACE to avoid this.
+
+**dbt command not found in Airflow?**
+We install dbt at runtime. If it fails, exec into the container and run:
+```bash
+docker exec -u airflow sports_airflow_scheduler /home/airflow/.local/bin/pip install dbt-core dbt-postgres
+```
 
 ---
 
