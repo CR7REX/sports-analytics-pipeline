@@ -11,8 +11,12 @@ renamed as (
         league,
         league_code,
         
-        -- Match details
-        to_date(date, 'DD/MM/YY') as match_date,
+        -- Match details - handle both YY and YYYY formats
+        case
+            when length(date) = 8 then to_date(date, 'DD/MM/YY')  -- 05/03/25
+            when length(date) = 10 then to_date(date, 'DD/MM/YYYY')  -- 05/03/2025
+            else to_date(date, 'DD/MM/YY')
+        end as match_date,
         hometeam as home_team,
         awayteam as away_team,
         

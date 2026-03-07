@@ -6,6 +6,7 @@ import requests
 import pandas as pd
 import json
 import os
+from sqlalchemy import create_engine, text
 
 # Football-Data.co.uk API endpoints
 BASE_URL = "https://www.football-data.co.uk/mmz4281"
@@ -13,6 +14,15 @@ BASE_URL = "https://www.football-data.co.uk/mmz4281"
 # Data paths - use environment variable or default to local path
 DATA_DIR = os.environ.get('AIRFLOW_DATA_DIR', './data')
 RAW_DATA_PATH = os.path.join(DATA_DIR, 'raw', 'matches.csv')
+
+# Database connection
+DB_HOST = os.environ.get('POSTGRES_HOST', 'postgres')
+DB_PORT = os.environ.get('POSTGRES_PORT', '5432')
+DB_NAME = os.environ.get('POSTGRES_DB', 'airflow')
+DB_USER = os.environ.get('POSTGRES_USER', 'airflow')
+DB_PASS = os.environ.get('POSTGRES_PASSWORD', 'airflow')
+
+DB_CONN_STR = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
 # Top European leagues
 LEAGUES = {
@@ -24,12 +34,23 @@ LEAGUES = {
     'F1': 'Ligue 1'
 }
 
+def get_current_season():
+    """动态获取当前赛季 (格式: YY/YY)"""
+    today = datetime.now()
+    year = today.year
+    month = today.month
+    # 欧洲赛季通常8月开始
+    if month >= 8:
+        return f"{year % 100}{(year + 1) % 100}"
+    else:
+        return f"{(year - 1) % 100}{year % 100}"
+
 def extract_match_data(**context):
     """
     Extract match data from Football-Data.co.uk
     Downloads CSV data for current season
     """
-    season = "2526"  # 2025-26 season format
+    season = get_current_season()  # 动态获取当前赛季
     all_matches = []
     
     for league_code, league_name in LEAGUES.items():
@@ -78,6 +99,38 @@ def validate_data(**context):
     print(f"✅ All {len(checks)} data quality checks passed")
     return checks
 
+def load_to_postgres(**context):
+    """
+    Load cleaned data into PostgreSQL for dbt consumption
+    """
+    if not os.path.exists(RAW_DATA_PATH):
+        raise ValueError(f"Raw data file not found at {RAW_DATA_PATH}!")
+    
+    df = pd.read_csv(RAW_DATA_PATH)
+    
+    # Connect to Postgres
+    engine = create_engine(DB_CONN_STR)
+    
+    # Rename columns to lowercase for consistency
+    df.columns = [col.lower() for col in df.columns]
+    
+    # Load to database (replace mode for daily refresh)
+    df.to_sql(
+        'matches',
+        engine,
+        schema='public',
+        if_exists='replace',
+        index=False
+    )
+    
+    # Verify load
+    with engine.connect() as conn:
+        result = conn.execute(text("SELECT COUNT(*) FROM public.matches"))
+        count = result.scalar()
+    
+    print(f"✅ Loaded {count} rows to public.matches")
+    return count
+
 # DAG definition
 with DAG(
     'football_data_etl',
@@ -106,4 +159,10 @@ with DAG(
         python_callable=validate_data,
     )
 
-    extract_task >> validate_task
+    load_task = PythonOperator(
+        task_id='load_to_postgres',
+        python_callable=load_to_postgres,
+    )
+
+    # DAG flow: extract -> validate -> load
+    extract_task >> validate_task >> load_task
