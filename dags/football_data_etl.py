@@ -116,9 +116,9 @@ def load_to_postgres(**context):
     df.columns = [col.lower() for col in df.columns]
     
     # Clear existing data and load new data
-    with engine.connect() as conn:
+    with engine.begin() as conn:  # 使用 begin() 而不是 connect()，自动处理 commit
         conn.execute(text("TRUNCATE TABLE public.matches"))
-        conn.commit()
+    # 事务在退出上下文时自动提交
     
     df.to_sql(
         'matches',
